@@ -23,7 +23,7 @@ FetchContent_MakeAvailable(glm)
 
 find_package(OpenGL REQUIRED COMPONENTS OpenGL)
 
-add_executable(${PROJECT_NAME} main.cpp)
+add_executable(${PROJECT_NAME} src/main.cpp)
 
 add_library(glad STATIC ${CMAKE_CURRENT_SOURCE_DIR}/lib/glad.c)
 target_include_directories(glad PUBLIC include)
