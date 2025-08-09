@@ -7,15 +7,12 @@ ConsoleInput::ConsoleInput() : thread([this] { run(); }) {}
 void ConsoleInput::run()
 {
     std::string line;
-    while (shouldClose.load())
+    while (!shouldClose.load())
     {
-        if (std::cin.rdbuf()->in_avail() > 0)
+        if (std::getline(std::cin, line))
         {
-            if (std::getline(std::cin, line))
-            {
-                std::lock_guard lock(dispMutex);
-                if (dispatcher) dispatcher->takeInput(line);
-            }
+            std::lock_guard lock(dispMutex);
+            if (dispatcher) dispatcher->takeInput(line);
         }
     }
 }
@@ -23,7 +20,7 @@ void ConsoleInput::run()
 void ConsoleInput::setDispatcher(const std::shared_ptr<InputDispatcher>& dispatcher_)
 {
     std::lock_guard lock(dispMutex);
-    this->dispatcher = dispatcher_;
+    dispatcher = dispatcher_;
 }
 
 ConsoleInput& ConsoleInput::getInstance()
@@ -34,7 +31,10 @@ ConsoleInput& ConsoleInput::getInstance()
 
 ConsoleInput::~ConsoleInput()
 {
+    dispatcher.reset();
     shouldClose.store(true);
+    std::cout << "Press enter to exit.\n";
+    thread.join();
 }
 
 
