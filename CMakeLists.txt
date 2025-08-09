@@ -24,8 +24,9 @@ FetchContent_MakeAvailable(glm)
 find_package(OpenGL REQUIRED COMPONENTS OpenGL)
 
 add_executable(${PROJECT_NAME} src/main.cpp
-        src/Shader.cpp
+        src/graphics/Shader.cpp
         src/ConsoleInput.cpp
+        src/ParrotDispatcher.cpp
 )
 
 add_library(glad STATIC ${CMAKE_CURRENT_SOURCE_DIR}/lib/glad.c)
