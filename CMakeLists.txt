@@ -23,7 +23,10 @@ FetchContent_MakeAvailable(glm)
 
 find_package(OpenGL REQUIRED COMPONENTS OpenGL)
 
-add_executable(${PROJECT_NAME} src/main.cpp)
+add_executable(${PROJECT_NAME} src/main.cpp
+        src/Shader.cpp
+        src/ConsoleInput.cpp
+)
 
 add_library(glad STATIC ${CMAKE_CURRENT_SOURCE_DIR}/lib/glad.c)
 target_include_directories(glad PUBLIC include)
@@ -37,6 +40,7 @@ target_link_libraries(${PROJECT_NAME}
 target_include_directories(${PROJECT_NAME} PRIVATE ${glfw_SOURCE_DIR}/include)
 target_include_directories(${PROJECT_NAME} PRIVATE ${glm_SOURCE_DIR})
 target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
+target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 if(APPLE)
     find_library(COCOA_LIBRARY Cocoa)
