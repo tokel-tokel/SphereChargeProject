@@ -17,9 +17,9 @@ constexpr std::string enumToString<ShaderType>(ShaderType type)
     return "unknown";
 }
 
-Shader::Shader(GLuint id) : id(id) {}
+Shader::Shader(OpenGLContext context, GLuint id) : context(context), id(id) {}
 
-Shader::Shader(Shader&& other) noexcept
+Shader::Shader(Shader&& other) noexcept : context(other.context)
 {
     id = other.id;
     other.id = 0;
@@ -30,14 +30,16 @@ Shader& Shader::operator=(Shader&& other) noexcept
     if (this != &other)
     {
         this->~Shader();
+        context = other.context;
         id = other.id;
         other.id = 0;
     }
     return *this;
 }
 
-Shader::~Shader() noexcept
+Shader::~Shader()
 {
+    context.makeCurrent();
     glDeleteProgram(id);
 }
 
@@ -46,7 +48,35 @@ GLuint Shader::getId() const noexcept
     return id;
 }
 
-std::optional<Shader> Shader::loadFromFile(std::string_view vspath, std::string_view fspath)
+void Shader::addUniformLocation(const std::string& name)
+{
+    context.makeCurrent();
+    int loc{glGetUniformLocation(id, name.c_str())};
+    if (loc == -1) throw std::invalid_argument("uniform location " + name + " does not exist");
+    uniformLocations[name] = loc;
+}
+
+template <>
+void Shader::setUniform<float>(const std::string& name, float value) const
+{
+    if (!uniformLocations.contains(name)) return;
+    context.makeCurrent();
+    glUniform1f(uniformLocations.at(name), value);
+}
+
+void Shader::use() const
+{
+    context.makeCurrent();
+    glUseProgram(id);
+}
+
+void Shader::unuse() const
+{
+    context.makeCurrent();
+    glUseProgram(0);
+}
+
+std::optional<Shader> Shader::loadFromFile(std::string_view vspath, std::string_view fspath, OpenGLContext context)
 {
     std::string vscode, fscode;
     std::ifstream vsfile, fsfile;
@@ -69,6 +99,7 @@ std::optional<Shader> Shader::loadFromFile(std::string_view vspath, std::string_
         std::cerr << "ERROR::SHADER::FILE_NOT_SUCCESSFULLY_READ: " << e.what() << std::endl;
         return std::nullopt;
     }
+    context.makeCurrent();
     const char* cvscode{vscode.c_str()};
     const char* cfscode{fscode.c_str()};
     GLuint vertex{glCreateShader(GL_VERTEX_SHADER)};
@@ -86,7 +117,7 @@ std::optional<Shader> Shader::loadFromFile(std::string_view vspath, std::string_
     if (!checkCompileError(program, ShaderType::PROGRAM)) return std::nullopt;
     glDeleteShader(vertex);
     glDeleteShader(fragment);
-    return Shader(program);
+    return Shader(context, program);
 }
 
 bool Shader::checkCompileError(GLuint shader, ShaderType type)

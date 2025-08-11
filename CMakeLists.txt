@@ -25,6 +25,10 @@ find_package(OpenGL REQUIRED COMPONENTS OpenGL)
 
 add_executable(${PROJECT_NAME} src/main.cpp
         src/graphics/Shader.cpp
+        src/graphics/SphereRenderer.cpp
+        src/graphics/MainWindow.cpp
+        src/graphics/GLFWContext.cpp
+        src/graphics/OpenGLContext.cpp
         src/ConsoleInput.cpp
         src/ParrotDispatcher.cpp
 )

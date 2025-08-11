@@ -1,16 +1,13 @@
-#include <glad/glad.h>
-#include <glm/glm.hpp>
-#include <GLFW/glfw3.h>
-
-#include "ConsoleInput.h"
-#include "ParrotDispatcher.h"
+#include "graphics/MainWindow.h"
+#include "graphics/SphereRenderer.h"
 
 int main()
 {
-    std::atomic<bool> exitFlag{false};
-    auto inputDispatcher{std::make_shared<ParrotDispatcher>(exitFlag)};
-    ConsoleInput::getInstance().setDispatcher(inputDispatcher);
-
-    while (!exitFlag);
+    MainWindow mainWindow(800, 600);
+    SphereRendererBuilder builder;
+    builder.setContext(mainWindow.getContext()).setMesh(20, 12).
+        setShader(Shader::loadFromFile("resouces/shaders/sphere_vertex.glsl", "resources/shaders/sphere_fragment.glsl", mainWindow.getContext()).value());
+    mainWindow.setRenderer(builder);
+    mainWindow.run();
 }
 
