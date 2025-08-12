@@ -1,7 +1,9 @@
+#include <glad/glad.h>
 #include "MainWindow.h"
 
+#include <iostream>
 #include <stdexcept>
-
+#include <GLFW/glfw3.h>
 #include "GLFWContext.h"
 
 MainWindow::MainWindow(unsigned short width, unsigned short height) : width(width), height(height)
@@ -16,6 +18,34 @@ MainWindow::MainWindow(unsigned short width, unsigned short height) : width(widt
         throw std::runtime_error("Failed to initialize GLAD");
     }
     glfwSetFramebufferSizeCallback(window, &MainWindow::frameBufferSizeCallback);
+    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_CULL_FACE);
+    glFrontFace(GL_CCW);
+}
+
+MainWindow::MainWindow(MainWindow&& other) noexcept : width(other.width), height(other.height), window(other.window), sphere(std::move(other.sphere)),
+    renderer(std::move(other.renderer))
+{
+    other.width = 0;
+    other.height = 0;
+    other.window = nullptr;
+}
+
+MainWindow& MainWindow::operator=(MainWindow&& other) noexcept
+{
+    if (this != &other)
+    {
+        this->~MainWindow();
+        width = other.width;
+        height = other.height;
+        window = other.window;
+        sphere = std::move(other.sphere);
+        renderer = std::move(other.renderer);
+        other.width = 0;
+        other.height = 0;
+        other.window = nullptr;
+    }
+    return *this;
 }
 
 MainWindow::~MainWindow()
@@ -27,12 +57,12 @@ void MainWindow::run()
 {
     while (!glfwWindowShouldClose(window))
     {
-        glfwSwapBuffers(window);
-        glfwPollEvents();
         processInput();
         glClearColor(.8f, .8f, .8f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         renderer->render(.8f);
+        glfwSwapBuffers(window);
+        glfwPollEvents();
     }
 }
 

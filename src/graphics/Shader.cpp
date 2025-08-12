@@ -1,3 +1,4 @@
+#include <glad/glad.h>
 #include "Shader.h"
 #include "util.h"
 
@@ -19,9 +20,8 @@ constexpr std::string enumToString<ShaderType>(ShaderType type)
 
 Shader::Shader(OpenGLContext context, GLuint id) : context(context), id(id) {}
 
-Shader::Shader(Shader&& other) noexcept : context(other.context)
+Shader::Shader(Shader&& other) noexcept : context(other.context), uniformLocations(std::move(other.uniformLocations)), id(other.id)
 {
-    id = other.id;
     other.id = 0;
 }
 
@@ -31,6 +31,7 @@ Shader& Shader::operator=(Shader&& other) noexcept
     {
         this->~Shader();
         context = other.context;
+        uniformLocations = std::move(other.uniformLocations);
         id = other.id;
         other.id = 0;
     }
