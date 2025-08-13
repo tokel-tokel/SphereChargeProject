@@ -3,14 +3,15 @@
 #include <glm/glm.hpp>
 #include <glm/ext/scalar_constants.hpp>
 
+#include "Camera.h"
 #include "Mesh.h"
+#include "RendererBase.h"
 #include "Shader.h"
 #include "objects/ChargedSphere.h"
 
-struct SphereMesh : Mesh<5>
+struct SphereMesh : Mesh<5, 2, 3>
 {
     static SphereMesh createSphere(GLuint meridians, GLuint parallels);
-    static constexpr std::array<GLuint, 2> inParamSize{2, 3};
 private:
     static constexpr float pi{glm::pi<float>()};
     static constexpr float deltaThetaMultip{0.7f};
@@ -21,23 +22,19 @@ private:
     }
 };
 
-class SphereRenderer 
+class SphereRenderer : public RendererBase<SphereMesh>
 {
 private:
-    OpenGLContext context;
     std::reference_wrapper<ChargedSphere> sphere;
-    Shader shader;
-    SphereMesh mesh;
-    GLuint VAO, VBO, EBO;
 public:
     SphereRenderer(OpenGLContext context, ChargedSphere& sphere_, Shader&& shader_, SphereMesh&& mesh_);
     SphereRenderer(const SphereRenderer&) = delete;
     SphereRenderer& operator=(const SphereRenderer&) = delete;
-    SphereRenderer(SphereRenderer&& other) noexcept;
-    SphereRenderer& operator=(SphereRenderer&& other) noexcept;
-    ~SphereRenderer();
+    SphereRenderer(SphereRenderer&&) = default;
+    SphereRenderer& operator=(SphereRenderer&&) = default;
+    ~SphereRenderer() = default;
 
-    void render(float radius) const;
+    void render(float radius, const Camera& camera) const;
 };
 
 class SphereRendererBuilder

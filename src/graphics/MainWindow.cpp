@@ -8,6 +8,10 @@
 
 MainWindow::MainWindow(unsigned short width, unsigned short height) : width(width), height(height)
 {
+    camera.setAspectRatio(static_cast<float>(width) / height);
+    camera.setPosition({1.5f, 1.5f, 1.5f});
+    camera.setAzimuth(5 * glm::pi<float>() / 4);
+    camera.setPolar(2 * glm::pi<float>() / 3);
     GLFWContext::init();
     window = glfwCreateWindow(width, height, "Charged Sphere", nullptr, nullptr);
     if (!window) throw std::runtime_error("Failed to create GLFW window");
@@ -18,13 +22,14 @@ MainWindow::MainWindow(unsigned short width, unsigned short height) : width(widt
         throw std::runtime_error("Failed to initialize GLAD");
     }
     glfwSetFramebufferSizeCallback(window, &MainWindow::frameBufferSizeCallback);
+    glfwSetWindowUserPointer(window, this);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
     glFrontFace(GL_CCW);
 }
 
 MainWindow::MainWindow(MainWindow&& other) noexcept : width(other.width), height(other.height), window(other.window), sphere(std::move(other.sphere)),
-    renderer(std::move(other.renderer))
+    renderer(std::move(other.renderer)), gridRenderer(std::move(other.gridRenderer))
 {
     other.width = 0;
     other.height = 0;
@@ -35,12 +40,14 @@ MainWindow& MainWindow::operator=(MainWindow&& other) noexcept
 {
     if (this != &other)
     {
-        this->~MainWindow();
+        glfwDestroyWindow(window);
         width = other.width;
         height = other.height;
         window = other.window;
         sphere = std::move(other.sphere);
+        camera = other.camera;
         renderer = std::move(other.renderer);
+        gridRenderer = std::move(other.gridRenderer);
         other.width = 0;
         other.height = 0;
         other.window = nullptr;
@@ -60,7 +67,8 @@ void MainWindow::run()
         processInput();
         glClearColor(.8f, .8f, .8f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        renderer->render(.8f);
+        renderer->render(.8f, camera);
+        gridRenderer->render(.8f, camera);
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
@@ -76,6 +84,12 @@ void MainWindow::setRenderer(SphereRendererBuilder& builder)
     renderer.emplace(builder.setReference(sphere).build());
 }
 
+void MainWindow::setGridRenderer(SphereGridRenderer&& renderer_)
+{
+    gridRenderer.emplace(std::move(renderer_));
+}
+
+
 void MainWindow::processInput()
 {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) glfwSetWindowShouldClose(window, true);
@@ -84,4 +98,8 @@ void MainWindow::processInput()
 void MainWindow::frameBufferSizeCallback(GLFWwindow* window, int width, int height)
 {
     glViewport(0, 0, width, height);
+    auto thisPtr{static_cast<MainWindow*>(glfwGetWindowUserPointer(window))};
+    thisPtr->width = width;
+    thisPtr->height = height;
+    thisPtr->camera.setAspectRatio(static_cast<float>(width) / height);
 }

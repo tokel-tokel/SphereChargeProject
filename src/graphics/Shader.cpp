@@ -3,8 +3,12 @@
 #include "util.h"
 
 #include <fstream>
+#include <functional>
 #include <iostream>
 #include <sstream>
+
+#include "glm/glm.hpp"
+#include "glm/gtc/type_ptr.hpp"
 
 template <>
 constexpr std::string enumToString<ShaderType>(ShaderType type)
@@ -58,11 +62,19 @@ void Shader::addUniformLocation(const std::string& name)
 }
 
 template <>
-void Shader::setUniform<float>(const std::string& name, float value) const
+void Shader::setUniform<float>(const std::string& name, const float& value) const
 {
     if (!uniformLocations.contains(name)) return;
     context.makeCurrent();
     glUniform1f(uniformLocations.at(name), value);
+}
+
+template <>
+void Shader::setUniform<glm::mat4>(const std::string& name, const glm::mat4& value) const
+{
+    if (!uniformLocations.contains(name)) return;
+    context.makeCurrent();
+    glUniformMatrix4fv(uniformLocations.at(name), 1, GL_FALSE, glm::value_ptr(value));
 }
 
 void Shader::use() const

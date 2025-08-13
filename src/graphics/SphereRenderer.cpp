@@ -6,7 +6,7 @@
 #include <numeric>
 #include <stdexcept>
 
-SphereMesh SphereMesh::createSphere(GLuint meridians, GLuint parallels)
+SphereMesh SphereMesh::createSphere(GLuint meridians, GLuint parallels) // TODO: надо сделать так чтобы разрешение мэша сетки соответствовало разрешению сферы, но рисовать только ограниченное число меридианов и параллелей
 {
     if (meridians < 2 || parallels < 3) throw std::invalid_argument("Count of meridians must be at least 2 and of parallels at least 3");
     const GLuint merSize{parallels - 2};
@@ -50,87 +50,22 @@ SphereMesh SphereMesh::createSphere(GLuint meridians, GLuint parallels)
     return mesh;
 }
 
-static_assert(std::accumulate(SphereMesh::inParamSize.begin(), SphereMesh::inParamSize.end(), 0) == SphereMesh::vertSize, "Incorrect layout");
-
-SphereRenderer::SphereRenderer(OpenGLContext context, ChargedSphere& sphere_, Shader&& shader_, SphereMesh&& mesh_) :context(context), sphere(sphere_), shader(std::move(shader_)),
-    mesh(std::move(mesh_))
+SphereRenderer::SphereRenderer(OpenGLContext context, ChargedSphere& sphere_, Shader&& shader_, SphereMesh&& mesh_) :
+    RendererBase(context, std::move(shader_), std::move(mesh_)), sphere(sphere_)
 {
     shader.addUniformLocation("radius");
-    context.makeCurrent();
-    GLint attribLocation0 = glGetAttribLocation(shader.getId(), "position");
-    GLint attribLocation1 = glGetAttribLocation(shader.getId(), "inNormal");
-    std::cout << "Attribute locations - position: " << attribLocation0 << ", inNormal: " << attribLocation1 << std::endl;
-    glGenVertexArrays(1, &VAO);
-    glGenBuffers(1, &VBO);
-    glGenBuffers(1, &EBO);
-
-    glBindVertexArray(VAO);
-
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, mesh.vertices.size() * sizeof(float), mesh.vertices.data(), GL_STATIC_DRAW);
-
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, mesh.indices.size() * sizeof(GLuint), mesh.indices.data(), GL_STATIC_DRAW);
-
-    glVertexAttribPointer(0, mesh.inParamSize[0], GL_FLOAT, GL_FALSE, mesh.vertSize * sizeof(float), (GLvoid*)0);
-    glEnableVertexAttribArray(0);
-
-    glVertexAttribPointer(1, mesh.inParamSize[1], GL_FLOAT, GL_FALSE, mesh.vertSize * sizeof(float), (GLvoid*)(2 * sizeof(float)));
-    glEnableVertexAttribArray(1);
-
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindVertexArray(0);
+    shader.addUniformLocation("view");
+    shader.addUniformLocation("projection");
 }
 
-SphereRenderer::SphereRenderer(SphereRenderer&& other) noexcept : context(other.context), sphere(other.sphere), shader(std::move(other.shader)),
-    mesh(std::move(other.mesh)), VAO(other.VAO), VBO(other.VBO), EBO(other.EBO)
+void SphereRenderer::render(float radius, const Camera& camera) const
 {
-    other.VAO = 0;
-    other.VBO = 0;
-    other.EBO = 0;
-}
-
-SphereRenderer& SphereRenderer::operator=(SphereRenderer&& other) noexcept
-{
-    if (this != &other)
-    {
-        this->~SphereRenderer();
-        context = other.context;
-        sphere = other.sphere;
-        shader = std::move(other.shader);
-        mesh = std::move(other.mesh);
-        VAO = other.VAO;
-        VBO = other.VBO;
-        EBO = other.EBO;
-        other.VAO = 0;
-        other.VBO = 0;
-        other.EBO = 0;
-    }
-    return *this;
-}
-
-SphereRenderer::~SphereRenderer()
-{
-    std::cout << "Destroying SphereRenderer, VAO: " << VAO << std::endl;
-    if(VAO != 0)
-    {
-        context.makeCurrent();
-        glDeleteVertexArrays(1, &VAO);
-        glDeleteBuffers(1, &VBO);
-        glDeleteBuffers(1, &EBO);
-    }
-}
-
-void SphereRenderer::render(float radius) const
-{
-    context.makeCurrent();
-
-    //debug
-    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     shader.use();
     shader.setUniform("radius", radius);
+    shader.setUniform("view", camera.getView());
+    shader.setUniform("projection", camera.getProjection());
+    context.makeCurrent();
     glBindVertexArray(VAO);
-
     glDrawElements(GL_TRIANGLES, mesh.indices.size(), GL_UNSIGNED_INT, nullptr);
 
     GLenum error{glGetError()};
@@ -139,10 +74,8 @@ void SphereRenderer::render(float radius) const
         std::cout << "OpenGL Error after draw: " << error << "\n";
         while((error = glGetError()) != GL_NO_ERROR) std::cout << "Additional error: " << error << "\n";
     }
-
     glBindVertexArray(0);
     shader.unuse();
-    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 }
 
 

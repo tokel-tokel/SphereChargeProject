@@ -28,7 +28,7 @@ public:
     void addUniformLocation(const std::string& name);
 
     template<typename T>
-    void setUniform(const std::string& name, T value) const {}
+    void setUniform(const std::string& name, const T& value) const {}
 
     void use() const;
     void unuse() const;
