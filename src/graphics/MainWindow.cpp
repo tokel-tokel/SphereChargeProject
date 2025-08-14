@@ -21,11 +21,14 @@ MainWindow::MainWindow(unsigned short width, unsigned short height) : width(widt
         glfwDestroyWindow(window);
         throw std::runtime_error("Failed to initialize GLAD");
     }
-    glfwSetFramebufferSizeCallback(window, &MainWindow::frameBufferSizeCallback);
+    dispatcher.emplace(*this);
     glfwSetWindowUserPointer(window, this);
+    glfwSetFramebufferSizeCallback(window, &MainWindow::frameBufferSizeCallback);
+    glfwSetKeyCallback(window, &WindowInputDispatcher::keyCallback);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
     glFrontFace(GL_CCW);
+
 }
 
 MainWindow::MainWindow(MainWindow&& other) noexcept : width(other.width), height(other.height), window(other.window), sphere(std::move(other.sphere)),
@@ -62,6 +65,7 @@ MainWindow::~MainWindow()
 
 void MainWindow::run()
 {
+    timer.reset();
     while (!glfwWindowShouldClose(window))
     {
         processInput();
@@ -71,6 +75,8 @@ void MainWindow::run()
         gridRenderer->render(.8f, camera);
         glfwSwapBuffers(window);
         glfwPollEvents();
+        dispatcher->keyUpdate();
+        timer.update();
     }
 }
 

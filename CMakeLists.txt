@@ -30,6 +30,8 @@ add_executable(${PROJECT_NAME} src/main.cpp
         src/graphics/GLFWContext.cpp
         src/graphics/OpenGLContext.cpp
         src/graphics/SphereGridRenderer.cpp
+        src/graphics/WindowInputDispatcher.cpp
+        src/graphics/Timer.cpp
         src/graphics/Camera.cpp
         src/ConsoleInput.cpp
         src/ParrotDispatcher.cpp
