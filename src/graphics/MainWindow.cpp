@@ -9,9 +9,7 @@
 MainWindow::MainWindow(unsigned short width, unsigned short height) : width(width), height(height)
 {
     camera.setAspectRatio(static_cast<float>(width) / height);
-    camera.setPosition({1.5f, 1.5f, 1.5f});
-    camera.setAzimuth(5 * glm::pi<float>() / 4);
-    camera.setPolar(2 * glm::pi<float>() / 3);
+    camera.setPosition({0.0f, 0.0f, 2.0f});
     GLFWContext::init();
     window = glfwCreateWindow(width, height, "Charged Sphere", nullptr, nullptr);
     if (!window) throw std::runtime_error("Failed to create GLFW window");
@@ -33,7 +31,7 @@ MainWindow::MainWindow(unsigned short width, unsigned short height) : width(widt
 }
 
 MainWindow::MainWindow(MainWindow&& other) noexcept : width(other.width), height(other.height), window(other.window), sphere(std::move(other.sphere)),
-    renderer(std::move(other.renderer)), gridRenderer(std::move(other.gridRenderer))
+    renderer(std::move(other.renderer)), gridRenderer(std::move(other.gridRenderer)), focusRenderer(std::move(other.focusRenderer))
 {
     other.width = 0;
     other.height = 0;
@@ -52,6 +50,7 @@ MainWindow& MainWindow::operator=(MainWindow&& other) noexcept
         camera = other.camera;
         renderer = std::move(other.renderer);
         gridRenderer = std::move(other.gridRenderer);
+        focusRenderer = std::move(other.focusRenderer);
         other.width = 0;
         other.height = 0;
         other.window = nullptr;
@@ -73,6 +72,7 @@ void MainWindow::run()
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         renderer->render(.8f, camera);
         gridRenderer->render(.8f, camera);
+        focusRenderer->render();
         glfwSwapBuffers(window);
         glfwPollEvents();
         dispatcher->keyUpdate();
@@ -96,11 +96,19 @@ void MainWindow::setGridRenderer(SphereGridRenderer&& renderer_)
     gridRenderer.emplace(std::move(renderer_));
 }
 
+void MainWindow::setFocusRenderer(FocusRenderer&& renderer_)
+{
+    focusRenderer.emplace(std::move(renderer_));
+    focusRenderer->setAspectRatio(static_cast<float>(width) / height);
+}
+
 void MainWindow::frameBufferSizeCallback(GLFWwindow* window, int width, int height)
 {
     glViewport(0, 0, width, height);
     auto thisPtr{static_cast<MainWindow*>(glfwGetWindowUserPointer(window))};
     thisPtr->width = width;
     thisPtr->height = height;
-    thisPtr->camera.setAspectRatio(static_cast<float>(width) / height);
+    auto aspect{static_cast<float>(width) / height};
+    thisPtr->camera.setAspectRatio(aspect);
+    thisPtr->focusRenderer->setAspectRatio(aspect);
 }

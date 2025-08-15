@@ -12,6 +12,8 @@ int main()
         mainWindow.getContext()).value()};
     mainWindow.setGridRenderer(SphereGridRenderer(mainWindow.getContext(), std::move(gridShader),
         SphereGridMesh::createGrid(20, 11, 100, 60)));
+    mainWindow.setFocusRenderer(FocusRenderer(mainWindow.getContext(),
+        Shader::loadFromFile("resources/shaders/focus_vertex.glsl", "resources/shaders/focus_fragment.glsl", mainWindow.getContext()).value()));
     mainWindow.run();
 }
 

@@ -1,5 +1,6 @@
 #pragma once
 #include "Camera.h"
+#include "FocusRenderer.h"
 #include "SphereRenderer.h"
 #include "OpenGLContext.h"
 #include "SphereGridRenderer.h"
@@ -24,6 +25,7 @@ private:
     std::optional<WindowInputDispatcher> dispatcher;
     std::optional<SphereRenderer> renderer; // инициализируем через builder
     std::optional<SphereGridRenderer> gridRenderer;
+    std::optional<FocusRenderer> focusRenderer;
 public:
     MainWindow(unsigned short width, unsigned short height);
     MainWindow(const MainWindow&) = delete;
@@ -34,6 +36,7 @@ public:
     OpenGLContext getContext();
     void setRenderer(SphereRendererBuilder& builder);
     void setGridRenderer(SphereGridRenderer&& renderer_);
+    void setFocusRenderer(FocusRenderer&& renderer_);
     void run();
 private:
     static void frameBufferSizeCallback(GLFWwindow* window, int width, int height);
