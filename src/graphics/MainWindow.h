@@ -12,6 +12,8 @@ class WindowInputDispatcher;
 class MainWindow 
 {
     friend class WindowInputDispatcher;
+    friend class CameraMouseStrategy;
+    friend class MenuMouseStrategy;
 private:
     unsigned short width;
     unsigned short height;
@@ -34,6 +36,5 @@ public:
     void setGridRenderer(SphereGridRenderer&& renderer_);
     void run();
 private:
-    void processInput();
     static void frameBufferSizeCallback(GLFWwindow* window, int width, int height);
 };

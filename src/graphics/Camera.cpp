@@ -3,9 +3,6 @@
 #include "glm/ext/matrix_clip_space.hpp"
 #include "glm/ext/matrix_transform.hpp"
 
-Camera::Camera()
-{
-}
 
 Camera::Camera(glm::vec3 position_, float azimuth_, float polar_, float fov_, float aspect)
 {
@@ -45,6 +42,14 @@ void Camera::setAspectRatio(float aspect)
     else aspectRatio = aspect;
 }
 
+void Camera::centralize()
+{
+    glm::vec3 direction{glm::normalize(-position)};
+    setPolar(glm::acos(direction.y));
+    setAzimuth(glm::atan(direction.x, direction.z));
+}
+
+
 
 void Camera::rotate(float dAzimuth, float dPolar)
 {
@@ -57,6 +62,13 @@ void Camera::move(float dForward, float dRight)
     lazyVecInit();
     position += dForward * forward + dRight * right;
 }
+
+void Camera::moveUp(float dUp)
+{
+    lazyVecInit();
+    position += dUp * up;
+}
+
 
 void Camera::scale(float dFov)
 {
@@ -78,6 +90,7 @@ void Camera::lazyVecInit() const
 {
     if (vecInit) return;
     forward = {glm::sin(azimuth)*glm::sin(polar), glm::cos(polar), glm::cos(azimuth)*glm::sin(polar)};
-    right = glm::cross(forward, {0, 1, 0});
+    right = glm::normalize(glm::cross(forward, globalUp));
+    up = glm::cross(right, forward);
     vecInit = true;
 }

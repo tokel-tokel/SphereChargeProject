@@ -25,10 +25,11 @@ MainWindow::MainWindow(unsigned short width, unsigned short height) : width(widt
     glfwSetWindowUserPointer(window, this);
     glfwSetFramebufferSizeCallback(window, &MainWindow::frameBufferSizeCallback);
     glfwSetKeyCallback(window, &WindowInputDispatcher::keyCallback);
+    glfwSetCursorPosCallback(window, &WindowInputDispatcher::mouseCallback);
+    glfwSetScrollCallback(window, &WindowInputDispatcher::scrollCallback);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
     glFrontFace(GL_CCW);
-
 }
 
 MainWindow::MainWindow(MainWindow&& other) noexcept : width(other.width), height(other.height), window(other.window), sphere(std::move(other.sphere)),
@@ -68,7 +69,6 @@ void MainWindow::run()
     timer.reset();
     while (!glfwWindowShouldClose(window))
     {
-        processInput();
         glClearColor(.8f, .8f, .8f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         renderer->render(.8f, camera);
@@ -76,6 +76,7 @@ void MainWindow::run()
         glfwSwapBuffers(window);
         glfwPollEvents();
         dispatcher->keyUpdate();
+
         timer.update();
     }
 }
@@ -93,12 +94,6 @@ void MainWindow::setRenderer(SphereRendererBuilder& builder)
 void MainWindow::setGridRenderer(SphereGridRenderer&& renderer_)
 {
     gridRenderer.emplace(std::move(renderer_));
-}
-
-
-void MainWindow::processInput()
-{
-    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) glfwSetWindowShouldClose(window, true);
 }
 
 void MainWindow::frameBufferSizeCallback(GLFWwindow* window, int width, int height)

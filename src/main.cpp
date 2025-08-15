@@ -11,7 +11,7 @@ int main()
     Shader gridShader{Shader::loadFromFile("resources/shaders/sphere_grid_vertex.glsl", "resources/shaders/sphere_grid_fragment.glsl",
         mainWindow.getContext()).value()};
     mainWindow.setGridRenderer(SphereGridRenderer(mainWindow.getContext(), std::move(gridShader),
-        SphereGridMesh::createGrid(20, 12, 100, 60)));
+        SphereGridMesh::createGrid(20, 11, 100, 60)));
     mainWindow.run();
 }
 
