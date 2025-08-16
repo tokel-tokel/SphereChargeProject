@@ -1,4 +1,6 @@
 #pragma once
+#include <functional>
+
 #include "Camera.h"
 #include "FocusRenderer.h"
 #include "SphereRenderer.h"
@@ -26,7 +28,11 @@ private:
     std::optional<SphereRenderer> renderer; // инициализируем через builder
     std::optional<SphereGridRenderer> gridRenderer;
     std::optional<FocusRenderer> focusRenderer;
+    std::function<void()> freeCamRender;
+    std::function<void()> menuRender;
+    std::function<void()> currentRender;
 public:
+    enum class RenderMode {Menu, FreeCam};
     MainWindow(unsigned short width, unsigned short height);
     MainWindow(const MainWindow&) = delete;
     MainWindow& operator=(const MainWindow&) = delete;
@@ -37,6 +43,7 @@ public:
     void setRenderer(SphereRendererBuilder& builder);
     void setGridRenderer(SphereGridRenderer&& renderer_);
     void setFocusRenderer(FocusRenderer&& renderer_);
+    void switchRender(RenderMode mode);
     void run();
 private:
     static void frameBufferSizeCallback(GLFWwindow* window, int width, int height);

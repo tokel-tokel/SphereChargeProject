@@ -5,9 +5,9 @@
 #include <GLFW/glfw3.h>
 #include "MainWindow.h"
 
-void IKeyStrategy::setNext(std::unique_ptr<IKeyStrategy>&& next_)
+void IKeyStrategy::setNext(const std::shared_ptr<IKeyStrategy>& next_)
 {
-    next = std::move(next_);
+    next = next_;
 }
 
 class EscKeyStrategy : public IKeyStrategy
@@ -15,15 +15,17 @@ class EscKeyStrategy : public IKeyStrategy
 private:
     bool onMenu{false};
     WindowInputDispatcher& dispatcher;
+    MainWindow& mainWindow;
 public:
-    explicit EscKeyStrategy(WindowInputDispatcher& dispatcher) : dispatcher(dispatcher) {}
+    explicit EscKeyStrategy(WindowInputDispatcher& dispatcher, MainWindow& mainWindow) : dispatcher(dispatcher), mainWindow(mainWindow) {}
     void onKey(int key, int act) override
     {
-        using enum WindowInputDispatcher::MouseMode;
         if (key == GLFW_KEY_ESCAPE && act == GLFW_PRESS)
         {
             onMenu = !onMenu;
-            dispatcher.setMouseStrategy(onMenu ? Menu : Camera);
+            dispatcher.setMouseStrategy(onMenu ? WindowInputDispatcher::MouseMode::Menu : WindowInputDispatcher::MouseMode::Camera);
+            dispatcher.setKeyStrategy(onMenu ? WindowInputDispatcher::KeyMode::Menu : WindowInputDispatcher::KeyMode::FreeCam);
+            mainWindow.switchRender(onMenu ? MainWindow::RenderMode::Menu : MainWindow::RenderMode::FreeCam);
         }
         else if (next) next->onKey(key, act);
     }
@@ -80,13 +82,13 @@ void MenuMouseStrategy::init()
 
 WindowInputDispatcher::WindowInputDispatcher(MainWindow& window) : mainWindow(window)
 {
-    defaultControls = std::make_shared<EscKeyStrategy>(*this);
-    defaultControls->setNext(createDefaultControls(mainWindow.camera, mainWindow.timer, moveVelocity));
-    currentStrategy = defaultControls;
+    escControls = std::make_shared<EscKeyStrategy>(*this, mainWindow);
+    defaultControls = createDefaultControls(mainWindow.camera, mainWindow.timer, moveVelocity);
+    menuKeyControls.reset();
+    setKeyStrategy(KeyMode::FreeCam);
     cameraControls = std::make_shared<CameraMouseStrategy>(mainWindow, mainWindow.camera, sensivity, zoomSpeed);
     menuControls = std::make_shared<MenuMouseStrategy>(mainWindow);
-    currentMouseStrategy = cameraControls;
-    currentMouseStrategy->init();
+    setMouseStrategy(MouseMode::Camera);
 }
 
 void WindowInputDispatcher::setMouseStrategy(MouseMode mode)
@@ -97,6 +99,12 @@ void WindowInputDispatcher::setMouseStrategy(MouseMode mode)
     currentMouseStrategy->init();
 }
 
+void WindowInputDispatcher::setKeyStrategy(KeyMode mode)
+{
+    if (mode == KeyMode::FreeCam) escControls->setNext(defaultControls);
+    else if (mode == KeyMode::Menu) escControls->setNext(menuKeyControls);
+    currentStrategy = escControls;
+}
 
 void WindowInputDispatcher::keyUpdate() const
 {

@@ -28,6 +28,17 @@ MainWindow::MainWindow(unsigned short width, unsigned short height) : width(widt
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
     glFrontFace(GL_CCW);
+
+    freeCamRender = [&]{
+        renderer->render(.8f, camera);
+        gridRenderer->render(.8f, camera);
+        focusRenderer->render();
+    };
+    menuRender = [&]{
+        renderer->render(.8f, camera);
+        gridRenderer->render(.8f, camera);
+    };
+    currentRender = freeCamRender;
 }
 
 MainWindow::MainWindow(MainWindow&& other) noexcept : width(other.width), height(other.height), window(other.window), sphere(std::move(other.sphere)),
@@ -70,9 +81,7 @@ void MainWindow::run()
     {
         glClearColor(.8f, .8f, .8f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        renderer->render(.8f, camera);
-        gridRenderer->render(.8f, camera);
-        focusRenderer->render();
+        currentRender();
         glfwSwapBuffers(window);
         glfwPollEvents();
         dispatcher->keyUpdate();
@@ -101,6 +110,13 @@ void MainWindow::setFocusRenderer(FocusRenderer&& renderer_)
     focusRenderer.emplace(std::move(renderer_));
     focusRenderer->setAspectRatio(static_cast<float>(width) / height);
 }
+
+void MainWindow::switchRender(RenderMode mode)
+{
+    if (mode == RenderMode::FreeCam) currentRender = freeCamRender;
+    else if (mode == RenderMode::Menu) currentRender = menuRender;
+}
+
 
 void MainWindow::frameBufferSizeCallback(GLFWwindow* window, int width, int height)
 {
