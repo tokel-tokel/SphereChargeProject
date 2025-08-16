@@ -78,6 +78,7 @@ void MenuMouseStrategy::init()
 {
     glfwSetInputMode(mainWindow.window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
     glfwSetInputMode(mainWindow.window, GLFW_RAW_MOUSE_MOTION, GLFW_FALSE);
+    glfwSetCursorPos(mainWindow.window, mainWindow.width / 2, mainWindow.height / 2);
 }
 
 WindowInputDispatcher::WindowInputDispatcher(MainWindow& window) : mainWindow(window)

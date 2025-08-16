@@ -56,6 +56,8 @@ SphereRenderer::SphereRenderer(OpenGLContext context, ChargedSphere& sphere_, Sh
     shader.addUniformLocation("radius");
     shader.addUniformLocation("view");
     shader.addUniformLocation("projection");
+    shader.addUniformLocation("solidConeCos");
+    shader.addUniformLocation("solidPos");
 }
 
 void SphereRenderer::render(float radius, const Camera& camera) const
@@ -64,8 +66,11 @@ void SphereRenderer::render(float radius, const Camera& camera) const
     shader.setUniform("radius", radius);
     shader.setUniform("view", camera.getView());
     shader.setUniform("projection", camera.getProjection());
+    shader.setUniform("solidConeCos", sphere.get().getConeCos());
+    shader.setUniform("solidPos", sphere.get().getSolidPosition());
     context.makeCurrent();
     glBindVertexArray(VAO);
+    //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     glDrawElements(GL_TRIANGLES, mesh.indices.size(), GL_UNSIGNED_INT, nullptr);
 
     GLenum error{glGetError()};
@@ -75,6 +80,7 @@ void SphereRenderer::render(float radius, const Camera& camera) const
         while((error = glGetError()) != GL_NO_ERROR) std::cout << "Additional error: " << error << "\n";
     }
     glBindVertexArray(0);
+    //glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     shader.unuse();
 }
 

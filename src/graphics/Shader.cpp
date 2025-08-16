@@ -77,6 +77,14 @@ void Shader::setUniform<glm::mat4>(const std::string& name, const glm::mat4& val
     glUniformMatrix4fv(uniformLocations.at(name), 1, GL_FALSE, glm::value_ptr(value));
 }
 
+template <>
+void Shader::setUniform<glm::vec2>(const std::string& name, const glm::vec2& value) const
+{
+    if (!uniformLocations.contains(name)) return;
+    context.makeCurrent();
+    glUniform2f(uniformLocations.at(name), value.x, value.y);
+}
+
 void Shader::use() const
 {
     context.makeCurrent();

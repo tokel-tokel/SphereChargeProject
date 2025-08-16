@@ -34,6 +34,7 @@ add_executable(${PROJECT_NAME} src/main.cpp
         src/graphics/Timer.cpp
         src/graphics/Camera.cpp
         src/graphics/FocusRenderer.cpp
+        src/objects/ChargedSphere.cpp
         src/ConsoleInput.cpp
         src/ParrotDispatcher.cpp
 )
